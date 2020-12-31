@@ -13,6 +13,10 @@ import CSVTransactionValidService from '../services/CSVTransactionValidService';
 const transactionsRouter = Router();
 const upload = multer(uploadConfig);
 
+interface File {
+  path: string;
+}
+
 transactionsRouter.get('/', async (request, response) => {
   const transactionsRepositories = getCustomRepository(TransactionsRepository);
 
@@ -52,7 +56,7 @@ transactionsRouter.delete('/:id', async (request, response) => {
 
 transactionsRouter.post(
   '/import',
-  upload.single('file'),
+  upload.array('file'),
   async (request, response) => {
     const CSVTransactionValid = new CSVTransactionValidService();
     const createTransaction = new CreateTransactionService();
@@ -62,7 +66,9 @@ transactionsRouter.post(
       createTransaction,
     });
 
-    const transactions = await importTransactions.execute(request.file.path);
+    const files = request.files as File[];
+
+    const transactions = await importTransactions.execute(files);
 
     return response.status(201).json(transactions);
   },
